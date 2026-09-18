@@ -1,0 +1,17 @@
+{
+  "name": "book-aurora",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot server/index.ts & vite --open",
+    "server": "bun run server/index.ts",
+    "build": "vite build",
+    "start": "SERVE_DIST=1 bun run server/index.ts"
+  },
+  "devDependencies": {
+    "bun-types": "^1.4.2",
+    "playwright-core": "^1.63.0",
+    "typescript": "^5",
+    "vite": "^7"
+  }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Aurora</title>
+  <meta name="description" content="Jev reads a whole novel in a minute. Every passage becomes a colour." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <main id="app">
+    <aside class="panel">
+      <header>
+        <div class="eyebrow">Jev reads</div>
+        <h1 id="title">Alice's Adventures in Wonderland</h1>
+        <div id="author" class="author">Lewis Carroll</div>
+      </header>
+      <div class="controls">
+        <select id="book" aria-label="Book"></select>
+        <button id="start" class="btn">Read</button>
+      </div>
+      <dl class="stats">
+        <div><dt>passages</dt><dd id="s-seg">0 / 0</dd></div>
+        <div><dt>decisions</dt><dd id="s-dec">0</dd></div>
+        <div><dt>elapsed</dt><dd id="s-time">0.0s</dd></div>
+        <div><dt>jev latency</dt><dd id="s-lat">–</dd></div>
+      </dl>
+      <ul id="legend" class="legend"></ul>
+      <div id="provider" class="provider"></div>
+      <button id="poster" class="btn ghost" hidden>Save poster</button>
+    </aside>
+    <section class="stage">
+      <div class="ribbon" id="ribbon">
+        <div id="lanes" class="lanes"></div>
+        <div id="guides" class="guides"></div>
+        <canvas id="glow"></canvas>
+        <canvas id="aurora"></canvas>
+        <div id="chapters" class="chapters"></div>
+        <div id="cursor" class="cursor"></div>
+      </div>
+    </section>
+    <footer class="passage">
+      <div id="chapter" class="chapter"></div>
+      <p id="text"></p>
+      <div id="dominant" class="dominant"></div>
+    </footer>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+books/private/
+recordings/
+compare/
+.DS_Store
