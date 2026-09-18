@@ -54,7 +54,7 @@ async function readStream(bookId: string, signal: AbortSignal): Promise<Response
       send({ ...meta, total: segments.length, provider, questionsPerPassage: Object.keys(EMOTIONS).length + 1, emotions: EMOTIONS, chapters: [...new Set(segments.map(s => s.chapter))] }, 'meta');
       // Bounded concurrency, results emitted strictly in order so the aurora flows top to bottom.
       const pending: Promise<any>[] = [];
-      let next = 0, emitted = 0, failures = 0;
+      let next = 0, emitted = 0, failures = 0, cost = 0;
       const launch = () => {
         if (next >= segments.length) return;
         const s = segments[next++];
@@ -71,10 +71,10 @@ async function readStream(bookId: string, signal: AbortSignal): Promise<Response
           if (failures > 8) { send({ reason: 'too many Jev failures' }, 'abort'); break; }
           continue;
         }
-        emitted++;
+        emitted++; cost += item.r.cost;
         send({ i: item.s.i, chapter: item.s.chapter, text: item.s.text, ...item.r }, 'segment');
       }
-      send({ emitted, failures }, 'done');
+      send({ emitted, failures, cost }, 'done');
       controller.close();
     },
   });

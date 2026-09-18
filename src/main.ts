@@ -2,7 +2,7 @@ import { Aurora, LOOKS } from './aurora';
 import { renderPoster } from './poster';
 
 type Palette = Record<string, { color: string; hint: string }>;
-interface Seg { i: number; chapter: string; text: string; emotions: Record<string, number>; dominant: string; intensity: number; ms: number }
+interface Seg { i: number; chapter: string; text: string; emotions: Record<string, number>; dominant: string; intensity: number; ms: number; cost: number }
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const canvas = $<HTMLCanvasElement>('aurora'), glow = $<HTMLCanvasElement>('glow');
@@ -13,7 +13,7 @@ let palette: Palette = {};
 let meta: { title: string; author: string; total: number; provider: string; questionsPerPassage: number } | null = null;
 let es: EventSource | null = null;
 let queue: Seg[] = [];
-let shown = 0, decisions = 0, latencies: number[] = [];
+let shown = 0, decisions = 0, cost = 0, latencies: number[] = [];
 let startedAt = 0, endedAt = 0, done = false;
 let raf = 0;
 
@@ -43,7 +43,7 @@ function layout() {
 
 function start(book: string) {
   es?.close(); cancelAnimationFrame(raf);
-  queue = []; shown = 0; decisions = 0; latencies = []; done = false; endedAt = 0;
+  queue = []; shown = 0; decisions = 0; cost = 0; latencies = []; done = false; endedAt = 0;
   aurora = null; meta = null;
   $('poster').hidden = true; $<HTMLButtonElement>('start').disabled = true;
   $('text').textContent = ''; $('chapter').textContent = ''; $('dominant').textContent = '';
@@ -75,7 +75,7 @@ function tick(now: number) {
     lastShow = now;
     const s = queue.shift()!;
     aurora.add({ i: s.i, emotions: s.emotions, intensity: s.intensity });
-    shown++; decisions += meta.questionsPerPassage; latencies.push(s.ms);
+    shown++; decisions += meta.questionsPerPassage; cost += s.cost || 0; latencies.push(s.ms);
     showPassage(s);
     draw();
   }
@@ -84,6 +84,7 @@ function tick(now: number) {
   $('s-dec').textContent = String(decisions);
   $('s-time').textContent = `${elapsed.toFixed(1)}s`;
   if (latencies.length) $('s-lat').textContent = `${Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)}ms`;
+  $('s-cost').textContent = cost > 0 ? `$${cost.toFixed(4)}` : '–';
   if (done && !queue.length && !endedAt) finish();
 }
 
@@ -156,7 +157,7 @@ async function savePoster() {
   if (!aurora || !meta) return;
   const blob = await renderPoster(aurora, {
     title: meta.title, author: meta.author, seconds: ((endedAt || performance.now()) - startedAt) / 1000,
-    decisions, passages: shown, provider: meta.provider, palette,
+    decisions, passages: shown, cost, provider: meta.provider, palette,
   });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = `${meta.title.replace(/[^\w]+/g, '-').toLowerCase()}-aurora.png`; a.click();

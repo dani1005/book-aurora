@@ -1,6 +1,6 @@
 import { LOOKS, type Aurora } from './aurora';
 
-export interface PosterMeta { title: string; author: string; seconds: number; decisions: number; passages: number; provider: string; palette: Record<string, { color: string }>; }
+export interface PosterMeta { title: string; author: string; seconds: number; decisions: number; passages: number; cost: number; provider: string; palette: Record<string, { color: string }>; }
 
 export async function renderPoster(aurora: Aurora, m: PosterMeta): Promise<Blob> {
   await (document as any).fonts?.ready;
@@ -54,7 +54,7 @@ export async function renderPoster(aurora: Aurora, m: PosterMeta): Promise<Blob>
     }
   }
   ctx.fillStyle = '#7d7a90'; ctx.font = '400 17px "IBM Plex Mono", monospace';
-  const foot = `${m.passages} passages · ${m.decisions} decisions · read in ${m.seconds.toFixed(1)}s · top to bottom`;
+  const foot = `${m.passages} passages · ${m.decisions} decisions · read in ${m.seconds.toFixed(1)}s` + (m.cost > 0 ? ` · $${m.cost.toFixed(3)}` : '') + ' · top to bottom';
   ctx.textAlign = 'center'; ctx.fillText(foot, W / 2, 1640);
   ctx.fillStyle = '#4b4960'; ctx.font = '400 15px "IBM Plex Mono", monospace';
   ctx.fillText('Every row is one passage. Every colour is a probability Jev assigned. No pixels, no prose; just judgement.', W / 2, 1680); ctx.textAlign = 'left';

@@ -6,6 +6,7 @@ export interface Reading {
   intensity: number;                 // 0..1
   confidence: number;
   ms: number;
+  cost: number;                      // USD, as reported by the provider (0 when unknown)
   provider: 'openrouter' | 'typesafe' | 'mock';
 }
 
@@ -57,7 +58,8 @@ function normalise(raw: any, ms: number, provider: Reading['provider']): Reading
   const intensityQ = typeof iq === 'number' ? iq / (INTENSITY_LEVELS.length - 1) : top / maxLevel;
   const intensity = Math.max(0, Math.min(1, 0.5 * intensityQ + 0.5 * (top / maxLevel)));
   const confidence = typeof answers[dominant]?.confidence === 'number' ? answers[dominant].confidence : 0.5;
-  return { emotions, dominant, intensity, confidence, ms, provider };
+  const cost = typeof raw?.usage?.cost === 'number' ? raw.usage.cost : 0;
+  return { emotions, dominant, intensity, confidence, ms, cost, provider };
 }
 
 const TIMEOUT_MS = Number(process.env.JEV_TIMEOUT_MS || 8000);
@@ -150,6 +152,6 @@ function mockReader(): Reader {
     const dominant = EMOTION_KEYS[probs.indexOf(Math.max(...probs))];
     await new Promise(r => setTimeout(r, 90 + Math.random() * 160));
     const punch = (text.match(/!|\?/g)?.length ?? 0);
-    return { emotions, dominant, intensity: Math.min(1, 0.2 + punch * 0.08 + Math.random() * 0.3), confidence: Math.max(...probs) * 1.4, ms: 120, provider: 'mock' };
+    return { emotions, dominant, intensity: Math.min(1, 0.2 + punch * 0.08 + Math.random() * 0.3), confidence: Math.max(...probs) * 1.4, ms: 120, cost: 0, provider: 'mock' };
   };
 }
