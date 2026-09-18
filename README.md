@@ -45,3 +45,7 @@ bun run build && bun run start   # serves dist/ and the API from one Bun process
 ![Frankenstein poster](examples/frankenstein-poster.png)
 
 Texts in `books/` are from [Project Gutenberg](https://www.gutenberg.org) and in the public domain.
+
+## License
+
+MIT. Book texts are public domain via Project Gutenberg.
