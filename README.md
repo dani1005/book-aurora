@@ -34,6 +34,14 @@ licence are stripped, `Title:` / `Author:` are read, and `CHAPTER …` headings 
 ribbon. Only public-domain texts belong in `books/`. Anything in `books/private/` is git-ignored, for
 reading books you own locally; the resulting poster contains no text, only colour.
 
+## Security notes
+
+The server listens on 127.0.0.1 only, refuses cross-site browser requests to `/api/read`, and never
+receives your key from the browser: the key lives in the server process. Every read costs real money
+(about 3 cents for Frankenstein), so if you expose it (`HOST=0.0.0.0` or a public deploy) add your own
+rate limiting and a spending cap first. Book text is sent to the Jev API as data; passages are rendered
+with `textContent`, never as HTML.
+
 ## Production
 
 ```sh

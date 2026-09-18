@@ -20,7 +20,12 @@ let raf = 0;
 async function init() {
   const books: { id: string; title: string; author: string; segments: number }[] = await fetch('/api/books').then(r => r.json());
   const sel = $<HTMLSelectElement>('book');
-  sel.innerHTML = books.map(b => `<option value="${b.id}">${b.title}${b.author ? ' · ' + b.author : ''} (${b.segments})</option>`).join('');
+  // Titles and authors come from the text files; build options with the DOM so a hostile file cannot inject markup.
+  sel.replaceChildren(...books.map(b => {
+    const o = document.createElement('option');
+    o.value = b.id; o.textContent = `${b.title}${b.author ? ' · ' + b.author : ''} (${b.segments})`;
+    return o;
+  }));
   const status = await fetch('/api/status').then(r => r.json());
   $('provider').textContent = status.provider === 'mock' ? 'mock mode · no jev key' : `jev via ${status.provider}`;
   $('start').onclick = () => start(sel.value);
