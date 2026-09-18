@@ -60,29 +60,48 @@ function normalise(raw: any, ms: number, provider: Reading['provider']): Reading
   return { emotions, dominant, intensity, confidence, ms, provider };
 }
 
+const TIMEOUT_MS = Number(process.env.JEV_TIMEOUT_MS || 8000);
+const HEDGE_MS = Number(process.env.JEV_HEDGE_MS || 1500);
+
+class HttpError extends Error { constructor(public status: number, text: string) { super(`HTTP ${status}: ${text}`); } }
+
+// Results are streamed in passage order, so one hung request would stall everything behind it.
+// Each attempt is hedged (a duplicate fires if the first has not answered in HEDGE_MS) and capped
+// at TIMEOUT_MS; transient failures (429, 529, 5xx, network) are retried with backoff.
 async function post(url: string, key: string, body: unknown) {
   const began = performance.now();
+  const payload = JSON.stringify(body);
+  const once = async () => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: payload,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) throw new HttpError(res.status, (await res.text()).slice(0, 300));
+    return res.json();
+  };
   let lastErr: Error | null = null;
-  // Retry transient upstream failures (429 rate limit, 529 overloaded, 5xx, network) with backoff.
   for (let attempt = 0; attempt < 4; attempt++) {
     if (attempt) await new Promise(r => setTimeout(r, 400 * 2 ** (attempt - 1) + Math.random() * 200));
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(20_000),
-      });
-      if (res.ok) return { raw: await res.json(), ms: Math.round(performance.now() - began) };
-      const text = (await res.text()).slice(0, 300);
-      lastErr = new Error(`HTTP ${res.status}: ${text}`);
-      if (res.status !== 429 && res.status < 500) throw lastErr; // 4xx other than rate limit: do not retry
+      const raw = await hedged(once, HEDGE_MS);
+      return { raw, ms: Math.round(performance.now() - began) };
     } catch (e) {
       lastErr = e instanceof Error ? e : new Error(String(e));
-      if (/^HTTP 4(?!29)/.test(lastErr.message)) throw lastErr;
+      if (lastErr instanceof HttpError && lastErr.status !== 429 && lastErr.status < 500) throw lastErr;
     }
   }
   throw lastErr ?? new Error('Jev request failed');
+}
+
+async function hedged<T>(run: () => Promise<T>, delay: number): Promise<T> {
+  const first = run();
+  const settled = first.then(v => ({ v }), e => ({ e }));
+  const winner = await Promise.race([settled, new Promise<'hedge'>(r => setTimeout(() => r('hedge'), delay))]);
+  if (winner !== 'hedge') { if ('e' in winner) throw winner.e; return winner.v; }
+  try { return await Promise.any([first, run()]); }
+  catch (e) { throw (e as AggregateError).errors?.[0] ?? e; }
 }
 
 export type Reader = (text: string, prev: string | null, chapter: string, i: number) => Promise<Reading>;

@@ -21,7 +21,8 @@ Set `OPENROUTER_API_KEY` (Jev via OpenRouter's `/api/alpha/decisions`, model `ty
 `TYPESAFE_AI_API_KEY` (native `api.typesafe.ai`) in `.env` or your shell. With neither, the app runs in
 a keyword-driven mock mode so you can work on the visuals.
 
-Optional: `JEV_MODEL`, `JEV_CONCURRENCY` (default 6), `PORT` (default 4319).
+Optional: `JEV_MODEL`, `JEV_CONCURRENCY` (default 6), `JEV_TIMEOUT_MS` (default 8000), `JEV_HEDGE_MS`
+(default 1500; a duplicate request fires if the first has not answered by then), `PORT` (default 4319).
 
 URL parameters: `auto` starts reading on load, `book=<id>` picks a book, `kiosk` hides the controls for
 screen recording, `look=aligned` switches from the flowing aurora to fixed labelled columns.
