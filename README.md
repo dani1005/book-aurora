@@ -2,7 +2,9 @@
 
 Jev reads a whole novel in under a minute. Every passage becomes a row of colour.
 
-![Frankenstein read by Jev](examples/frankenstein-screen.png)
+![Frankenstein read by Jev, sped up](examples/frankenstein.gif)
+
+*Frankenstein: 601 passages, 6,010 typed decisions, 37 seconds in this capture (about 22 s without the screen recorder), 3 cents. Played back at 4× speed.*
 
 Each ~90-word passage is sent to [Jev](https://typesafe.ai) (TypeSafe's System One decision model) with ten
 parallel typed questions: a 0–3 score for each of nine emotions, plus overall intensity. Jev never sees
